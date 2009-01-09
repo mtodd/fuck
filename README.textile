@@ -78,7 +78,7 @@ A more realistic example may be something like:
     # etc
     
   end
-</code></Fuck::Resource>
+</code></pre>
 
 h2. Copyright & License
 
