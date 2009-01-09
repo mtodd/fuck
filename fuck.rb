@@ -27,7 +27,14 @@ class Fuck
     end
     
     def call(env)
-      send(find_method(env["REQUEST_METHOD"]) || :unrecognized, *[@id].compact)
+      send((find_method(env["REQUEST_METHOD"]) || :not_implemented), *[@id].compact) or
+      not_found
+    rescue NoMethodError => e
+      not_implemented
+    rescue Exception => e
+      # logger.error e.message
+      # logger.error "\t"+e.backtrace.join("\n\t")
+      respond("Internal Server Error", :status => 500)
     end
     
     def find_method(request_method)
@@ -64,8 +71,12 @@ class Fuck
       ]
     end
     
-    def unrecognized
-      respond("Internal Server Error", :status => 500)
+    def not_found
+      respond("Not Found", :status => 404)
+    end
+    
+    def not_implemented
+      respond("Not Implemented", :status => 501)
     end
     
   end
