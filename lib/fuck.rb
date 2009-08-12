@@ -70,14 +70,25 @@ class Fuck
     PATH_INFO = %r{/?(\w+)(/(\w+))?}
     
     def call(env)
-      find_handler(env["PATH_INFO"], env["QUERY_STRING"]).call(env)
+      if handler = find_handler(env["PATH_INFO"], env["QUERY_STRING"])
+        handler.call(env)
+      else
+        [404, {'Content-Type' => 'text/html'}, []]
+      end
+    rescue Exception => e
+      env['rack.errors'].puts "ERROR: %s" % e.message
+      env['rack.errors'].puts "\t%s" % e.backtrace.join("\n\t")
+      [500, {'Content-Type' => 'text/html'}, []]
     end
     
     def find_handler(path_info, query_string)
-      path_info =~ PATH_INFO
-      resource, _, id = $1, $2, $3
-      params = Rack::Utils.parse_query(query_string)
-      Object.const_get(resource.capitalize).new(id, params)
+      if path_info =~ PATH_INFO
+        resource, _, id = $1, $2, $3
+        params = Rack::Utils.parse_query(query_string)
+        Object.const_get(resource.capitalize).new(id, params)
+      else
+        nil
+      end
     end
     
   end
