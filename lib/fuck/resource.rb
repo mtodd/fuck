@@ -9,13 +9,13 @@ class Fuck
     end
     
     def call(env)
-      send((find_method(env["REQUEST_METHOD"]) || :not_implemented), *[@id].compact) or
-      not_found
-    rescue NoMethodError => e
-      not_implemented
+      @env = env
+      request_method = find_method(@env["REQUEST_METHOD"]) || :not_implemented
+      return not_implemented unless self.respond_to?(request_method)
+      send(request_method, *[@id].compact) or not_found
     rescue Exception => e
-      # logger.error e.message
-      # logger.error "\t"+e.backtrace.join("\n\t")
+      @env['rack.errors'].puts "ERROR: %s" % e.message
+      @env['rack.errors'].puts "\t%s" % e.backtrace.join("\n\t")
       respond("Internal Server Error", :status => 500)
     end
     
@@ -36,6 +36,10 @@ class Fuck
       else
         nil
       end
+    end
+    
+    def location_for(id)
+      "%s://%s/%s" % [@env["rack.url_scheme"], @env["HTTP_HOST"], [self.class.to_s.downcase, id].join('/')]
     end
     
     def params
