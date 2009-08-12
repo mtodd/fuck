@@ -23,7 +23,7 @@ class Posts < Fuck::Resource
   
   def create
     if post = Post.create(params)
-      respond post.id.to_s
+      respond [], {:status => 201}, 'Location' => location_for(post.id)
     else
       respond "Unprocessable Entity", :status => 422
     end
